@@ -116,6 +116,6 @@ struct UncertainView: View {
         isLocked: .constant(true),
         students: .constant([]),
         takenImage: UIImage(named: "teeth")!,
-        tier: "Tier 3B"
+        tier: "Not Acceptable"
     )
 }

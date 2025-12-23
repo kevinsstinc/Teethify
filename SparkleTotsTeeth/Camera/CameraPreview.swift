@@ -43,5 +43,4 @@ struct CameraPreview: UIViewRepresentable {
 }
 
 
-// delete singular data in lists like through context menu
-// dont let them close teh sheet without filling in the name
+

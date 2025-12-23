@@ -177,9 +177,9 @@ struct ListView: View {
                     }
                 }
                 
-                VStack(alignment: .leading) {
+                VStack(alignment: .center) {
                     ZStack {
-                        VStack {
+                        VStack(alignment: .center) {
                             HStack {
                                 student.image
                                     .resizable()
@@ -188,7 +188,7 @@ struct ListView: View {
                                     .clipShape(RoundedRectangle(cornerRadius: 20))
                                     .padding()
                                 Spacer()
-                                Spacer()
+                               
                             }
                             HStack {
                                 Text(student.name)
@@ -196,6 +196,7 @@ struct ListView: View {
                                     .foregroundColor(.blue)
                                     .padding(.leading)
                                     .bold()
+                                    .multilineTextAlignment(.leading)
                                 Spacer()
                             }
                             HStack {
@@ -204,9 +205,11 @@ struct ListView: View {
                                     .foregroundColor(.blue)
                                     .padding(.leading)
                                     .padding(.bottom)
+                                    .multilineTextAlignment(.leading)
                                 Spacer()
                             }
                         }
+                       
                         .padding()
                         .background(
                             RoundedRectangle(cornerRadius: 24)

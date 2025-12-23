@@ -6,7 +6,9 @@
 //
 
 import SwiftUI
+import CoreML
 import Vision
+
 struct CameraView: View {
     @State private var isProcessingPhoto = false
     @State private var showSheet = false
@@ -58,15 +60,7 @@ struct CameraView: View {
                 camera.start()
                 camera.onPhotoCaptured = { img in
                     capturedUIImage = img
-                    if Bool.random() {
-                        captureType = .uncertain
-                        capturedTier = "Tier 3B"
-                    } else {
-                        captureType = .lowTier
-                        capturedTier = "Tier 1A"
-                    }
-                    showCaptureSheet = true
-                    isProcessingPhoto = false
+                    classifyImage(img)
                 }
             }
             .onDisappear { camera.stop() }
@@ -115,6 +109,42 @@ struct CameraView: View {
             }
         }
     }
+    private func classifyImage(_ image: UIImage) {
+        guard let cgImage = image.cgImage else { return }
+
+        do {
+            let model = try VNCoreMLModel(for: sparkletotsml().model)
+
+            let request = VNCoreMLRequest(model: model) { request, _ in
+                guard let result = request.results?.first as? VNClassificationObservation else {
+                    return
+                }
+
+                DispatchQueue.main.async {
+                    let confidence = result.confidence
+                    self.capturedTier = "\(result.identifier) (\(Int(confidence * 100))%)"
+
+                    if result.identifier == "Acceptable", confidence >= 0.75 {
+                        self.captureType = .lowTier
+                    } else {
+                        self.captureType = .uncertain
+                    }
+
+                    self.isProcessingPhoto = false
+                    self.showCaptureSheet = true
+                }
+            }
+
+            request.imageCropAndScaleOption = .centerCrop
+
+            let handler = VNImageRequestHandler(cgImage: cgImage)
+            try handler.perform([request])
+
+        } catch {
+            print("ML classification failed:", error)
+        }
+    }
+
 }
 
 #Preview {

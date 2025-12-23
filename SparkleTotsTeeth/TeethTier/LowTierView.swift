@@ -74,7 +74,7 @@ struct LowTierView: View {
         isLocked: .constant(true),
         students: .constant([]),
         takenImage: UIImage(named: "teeth")!,
-        tier: "Tier 1A"
+        tier: "Acceptable"
     )
 }
 

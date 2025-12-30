@@ -5,7 +5,6 @@
 //  Created by Joseph Kevin Fredric on 19/11/25.
 //
 
-
 import AVFoundation
 import SwiftUI
 import Combine
@@ -26,16 +25,32 @@ class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate
     private func setupSession() {
         session.beginConfiguration()
         session.sessionPreset = .photo
-
-        guard
-            let device = AVCaptureDevice.default(.builtInWideAngleCamera,
-                                                 for: .video,
-                                                 position: .back),
-            let input = try? AVCaptureDeviceInput(device: device),
-            session.canAddInput(input)
-        else { return }
+        guard let cameraDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back),
+              let input = try? AVCaptureDeviceInput(device: cameraDevice),
+              session.canAddInput(input) else { return }
 
         session.addInput(input)
+
+        do {
+            try cameraDevice.lockForConfiguration()
+            if cameraDevice.isFocusPointOfInterestSupported {
+                cameraDevice.focusPointOfInterest = CGPoint(x: 0.5, y: 0.5)
+            }
+            if cameraDevice.isFocusModeSupported(.autoFocus) {
+                cameraDevice.focusMode = .autoFocus
+            }
+            if cameraDevice.isFocusModeSupported(.continuousAutoFocus) {
+                cameraDevice.focusMode = .continuousAutoFocus
+            }
+            if cameraDevice.isAutoFocusRangeRestrictionSupported {
+                cameraDevice.autoFocusRangeRestriction = .near
+            }
+
+            cameraDevice.unlockForConfiguration()
+        } catch {
+            print("Failed to set focus modes:", error)
+        }
+
 
         guard session.canAddOutput(photoOutput) else { return }
         session.addOutput(photoOutput)
@@ -63,13 +78,10 @@ class CameraViewModel: NSObject, ObservableObject, AVCapturePhotoCaptureDelegate
 
     func photoOutput(_ output: AVCapturePhotoOutput,
                      didFinishProcessingPhoto photo: AVCapturePhoto,
-                     error: Error?)
-    {
+                     error: Error?) {
         guard let data = photo.fileDataRepresentation(),
-              let uiImage = UIImage(data: data)
-        else { return }
+              let uiImage = UIImage(data: data) else { return }
         capturedImage = uiImage
         onPhotoCaptured?(uiImage)
     }
 }
-

@@ -183,9 +183,11 @@ struct ListView: View {
                             HStack {
                                 student.image
                                     .resizable()
-                                    .scaledToFill()
-                                    .frame(height: 350)
-                                    .clipShape(RoundedRectangle(cornerRadius: 20))
+                                    .aspectRatio(1, contentMode: .fit)
+                                    .frame(maxWidth: .infinity)
+                                    .frame(maxHeight: 220)
+                                    .clipped()
+                                    .clipShape(RoundedRectangle(cornerRadius: 16))
                                     .padding()
                                 Spacer()
                                

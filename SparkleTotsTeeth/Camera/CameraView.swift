@@ -41,7 +41,7 @@ struct CameraView: View {
                     .frame(width: 250)
                     .opacity(0.15)
                     .allowsHitTesting(false)
-                    .rotationEffect(.degrees(90)) // rotate silhouette
+                    .rotationEffect(.degrees(90))
                 
                 VStack {
                     Spacer()
@@ -63,9 +63,9 @@ struct CameraView: View {
             .onAppear {
                 camera.start()
                 camera.onPhotoCaptured = { img in
-                    let rotated = img.rotated90CounterClockwise()
-                    capturedUIImage = rotated
-                    classifyImage(rotated)
+                    let processed = img.normalizedForModel()
+                    capturedUIImage = processed
+                    classifyImage(processed)
                 }
             }
             .onDisappear { camera.stop() }
@@ -169,8 +169,6 @@ struct CameraView: View {
                     Int(image.size.height)
                 )
                 ctx.cgContext.stroke(rect)
-
-                // Confidence text
                 let text = String(format: "%.0f%%", obs.confidence * 100)
                 let attrs: [NSAttributedString.Key: Any] = [
                     .font: UIFont.boldSystemFont(ofSize: 20),
@@ -187,8 +185,36 @@ extension UIImage {
         guard let cgImage = self.cgImage else { return self }
         return UIImage(cgImage: cgImage, scale: self.scale, orientation: .right)
     }
-}
+    func centerCroppedSquare() -> UIImage {
+            guard let cgImage = self.cgImage else { return self }
 
+            let width = cgImage.width
+            let height = cgImage.height
+            let side = min(width, height)
+
+            let x = (width - side) / 2
+            let y = (height - side) / 2
+
+            let cropRect = CGRect(x: x, y: y, width: side, height: side)
+
+            guard let croppedCG = cgImage.cropping(to: cropRect) else { return self }
+            return UIImage(cgImage: croppedCG, scale: scale, orientation: .up)
+        }
+
+        func resized(to size: CGSize) -> UIImage {
+            let renderer = UIGraphicsImageRenderer(size: size)
+            return renderer.image { _ in
+                self.draw(in: CGRect(origin: .zero, size: size))
+            }
+        }
+
+        func normalizedForModel() -> UIImage {
+            let rotated = self.rotated90CounterClockwise()
+            let square = rotated.centerCroppedSquare()
+            let resized = square.resized(to: CGSize(width: 512, height: 512))
+            return resized
+        }
+}
 #Preview {
     CameraView()
 }
